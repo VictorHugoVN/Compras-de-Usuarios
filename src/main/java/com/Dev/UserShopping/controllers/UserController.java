@@ -1,7 +1,10 @@
 package com.Dev.UserShopping.controllers;
 
 import com.Dev.UserShopping.DTO.UserDto;
+import com.Dev.UserShopping.model.User;
+import com.Dev.UserShopping.service.UserService;
 import jakarta.annotation.PostConstruct;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
@@ -11,6 +14,9 @@ import java.util.List;
 @RestController
 public class UserController {
 
+    @Autowired
+    private UserService userService;
+
     @GetMapping
     public String getMensagem(){
         return "Spring boot is working!";
@@ -18,40 +24,42 @@ public class UserController {
 
     @GetMapping("/users")
     public List<UserDto> getUsers(){
+        List<UserDto> usuarios = userService.getAll();
         return usuarios;
     }
 
-    @GetMapping("users/{cpf}")
+    @GetMapping("/user/{id}")
+    public UserDto findById(@PathVariable Long id){
+        return userService.findById(id);
+    }
+
+    @PostMapping("/user")
+    public UserDto newUser(@RequestBody UserDto userDto){
+        return userService.save(userDto);
+    }
+
+    @GetMapping("user/cpf/{cpf}")
     public UserDto getUsersFiltro(@PathVariable String cpf){
-        for(UserDto user: usuarios){
-            if(user.getCpf().equals(cpf)){
-                return user;
-            }
-        }
-        return null;
+        return userService.findByCpf(cpf);
     }
 
-    @PostMapping("/newUser")
-    public UserDto inserir(@RequestBody UserDto userDto){
-        userDto.setDataCadastro(new Date());
-        usuarios.add(userDto);
-        return userDto;
+    @DeleteMapping("/user/{id}")
+    public UserDto remover(@PathVariable Long id){
+        return userService.delete(id);
     }
 
-    @DeleteMapping("/users/{cpf}")
-    public boolean remover(@PathVariable String cpf){
-        for(UserDto user: usuarios){
-            if(user.getCpf().equals(cpf)){
-                usuarios.remove(user);
-                return true;
-            }
-        }
-        return false;
+    @GetMapping("/user/search")
+    public List<UserDto> queryByName(
+            @RequestParam(name="nome", required=true)
+            String nome
+    ){
+        return userService.queryByName(nome);
     }
 
 
     public static List<UserDto> usuarios = new ArrayList<UserDto>();
     @PostConstruct
+    //Faz com que este método seja executado assim que a classe for inicializada.
     public void initiateList(){
         UserDto userDto = new UserDto();
         userDto.setNome("Eduardo");
